@@ -171,7 +171,7 @@ public class MischmodulScript : MonoBehaviour {
     }
 
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use !{0} swap A2 E3 to swap those coordinates. Commands can be chained with spaces.";
+    private readonly string TwitchHelpMessage = @"Use !{0} swap A2 E3 to swap those coordinates. Commands can be chained with spaces. Use !{0} test to turn all incorrect squares temporarily black.";
     #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand (string input)
@@ -191,7 +191,22 @@ public class MischmodulScript : MonoBehaviour {
                 buttons[Array.IndexOf(coords, coord)].OnInteract();
                 yield return new WaitForSeconds(0.2f);
             }
-
+        }
+        else if (Regex.IsMatch(Command, @"^\s*(test)|(flash)|(inspect)|(glitch)|(flicker)\s*$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase));
+        {
+            yield return null;
+            for (int i = 0; i < 25; i++)
+            {
+                if (grid[i] != solution[i])
+                {
+                    sprites[i].sprite = black;
+                }
+            }
+            yield return new WaitForSeconds(0.75f);
+            for (int i = 0; i < 25; i++)
+            {
+                sprites[i].sprite = displayedIcons[grid[i]];
+            }
         }
     }
 
