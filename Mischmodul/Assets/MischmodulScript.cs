@@ -11,6 +11,7 @@ public class MischmodulScript : MonoBehaviour {
     public KMBombInfo Bomb;
     public KMAudio Audio;
     public KMSelectable[] buttons;
+    public KMSelectable glitchButton;
     public SpriteRenderer[] sprites;
     public SpriteRenderer bgSprite;
     public Sprite[] allIcons;
@@ -28,33 +29,34 @@ public class MischmodulScript : MonoBehaviour {
     static int moduleIdCounter = 1;
     int moduleId;
     private bool moduleSolved;
-    float glitchTime = 0f;
-    bool glitchStarted;
+    bool glitching;
 
     void Awake ()
     {
         moduleId = moduleIdCounter++;
 
+        glitchButton.OnInteract += delegate () { StartCoroutine(GlitchEffect()); return false; };
+        GetComponent<KMBombModule>().OnActivate += delegate () { Activate(); };
         Bomb.OnBombExploded += delegate () { Debug.LogFormat("[Mischmodul #{0}] Bomb detonation detected. Upon termination, the module displayed the following grid:", moduleId); LogLetters(grid); Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact Danny7007#1377 on Discord.", moduleId); };
-        foreach (KMSelectable button in buttons)
-        {
-            button.OnInteract += delegate () { KeyPress(Array.IndexOf(buttons, button)); return false; };
-            button.OnHighlight += delegate () { if(!moduleSolved) sprites[Array.IndexOf(buttons, button)].sprite = black; };
-            button.OnHighlightEnded += delegate () { if (Array.IndexOf(buttons, button) != selected) sprites[Array.IndexOf(buttons, button)].sprite = displayedIcons[grid[Array.IndexOf(buttons, button)]]; };
-        }
-            GetComponent<KMBombModule>().OnActivate += delegate () { Activate(); };
+    
     }
 
     void Start ()
     {
         chosenIcon = allIcons.Where(x => x != null).PickRandom();
-        bgSprite.sprite = Sprite.Create(chosenIcon.texture, chosenIcon.rect, new Vector2(0.5f, 0.5f));
+        bgSprite.sprite = chosenIcon;
         GetTiles();
         SetTiles();
     }
 
     void Activate()
     {
+        foreach (KMSelectable button in buttons)
+        {
+            button.OnInteract += delegate () { KeyPress(Array.IndexOf(buttons, button)); return false; };
+            button.OnHighlight += delegate () { if (!moduleSolved) sprites[Array.IndexOf(buttons, button)].sprite = black; };
+            button.OnHighlightEnded += delegate () { if (Array.IndexOf(buttons, button) != selected) sprites[Array.IndexOf(buttons, button)].sprite = displayedIcons[grid[Array.IndexOf(buttons, button)]]; };
+        }
         Audio.PlaySoundAtTransform("Intro", transform);
         grid.Shuffle();
         SetTiles();
@@ -63,13 +65,7 @@ public class MischmodulScript : MonoBehaviour {
 
     void KeyPress(int pos)
     {
-        if (!glitchStarted)
-        {
-            glitchStarted = true;
-            StartCoroutine(GlitchEffect());
-        }
         if (moduleSolved) return;
-        glitchTime = 0f;
         if (selected == null)
         {
             Audio.PlaySoundAtTransform("PistonOut", buttons[pos].transform);
@@ -133,27 +129,21 @@ public class MischmodulScript : MonoBehaviour {
 
     IEnumerator GlitchEffect()
     {
-        while (!moduleSolved)
+        if (moduleSolved || glitching) yield break;
+        glitching = true;
+        for (int i = 0; i < 25; i++)
         {
-            yield return null;
-            glitchTime += Time.deltaTime;
-            if (glitchTime > 5)
+            if (grid[i] != solution[i])
             {
-                glitchTime = 0;
-                for (int i = 0; i < 25; i++)
-                {
-                    if (grid[i] != solution[i])
-                    {
-                        sprites[i].transform.localPosition = new Vector3(0, 0.5f, 0); //Intentionally causes z-fighting for the glitch effect.
-                    }
-                }
-                yield return new WaitForSecondsRealtime(0.5f);
-                for (int i = 0; i < 25; i++)
-                {
-                    sprites[i].transform.localPosition = new Vector3(0, 0.501f, 0); 
-                }
+                sprites[i].transform.localPosition = new Vector3(0, 0.5f, 0); //Intentionally causes z-fighting for the glitch effect.
             }
         }
+        yield return new WaitForSecondsRealtime(0.5f);
+        for (int i = 0; i < 25; i++)
+        {
+            sprites[i].transform.localPosition = new Vector3(0, 0.501f, 0);
+        }
+        glitching = false;
     }
 
     void LogLetters(int[] input)
