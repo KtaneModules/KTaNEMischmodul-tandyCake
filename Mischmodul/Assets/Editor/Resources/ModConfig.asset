@@ -18,4 +18,4 @@ MonoBehaviour:
     by Danny7007\nmoduleID: mischmodule\r\nManual can be found on ktane.timwi.de\r\n"
   version: 1.0.0
   outputFolder: build
-  previewImage: {fileID: 2800000, guid: a3ce587a4be7a9546b5af454685e23ce, type: 3}
+  previewImage: {fileID: 2800000, guid: 92cce522802a0964ea0fe21c2912d242, type: 3}
