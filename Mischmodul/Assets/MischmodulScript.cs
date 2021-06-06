@@ -34,17 +34,16 @@ public class MischmodulScript : MonoBehaviour {
     void Awake ()
     {
         moduleId = moduleIdCounter++;
+
         glitchButton.OnInteract += delegate () { StartCoroutine(GlitchEffect()); return false; };
         GetComponent<KMBombModule>().OnActivate += delegate () { Activate(); };
         Bomb.OnBombExploded += delegate () { if (!moduleSolved) { Debug.LogFormat("[Mischmodul #{0}] Bomb detonation detected. Upon termination, the module displayed the following grid:", moduleId); LogLetters(grid); Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact Danny7007#1377 on Discord.", moduleId); } };
     
-        allIcons = allIcons.Where(x => x != null).ToArray();
     }
 
     void Start ()
     {
-        chosenIcon = allIcons.PickRandom();
-        //chosenIcon = allIcons.First(x => x.name.ToUpper().StartsWith("DEBUG"));
+        chosenIcon = allIcons.Where(x => x != null).PickRandom();
         bgSprite.sprite = chosenIcon;
         GetTiles();
         SetTiles();
