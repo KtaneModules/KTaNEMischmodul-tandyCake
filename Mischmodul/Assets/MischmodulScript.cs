@@ -15,16 +15,16 @@ public class MischmodulScript : MonoBehaviour {
     public SpriteRenderer[] sprites;
     public SpriteRenderer bgSprite;
     public Sprite[] allIcons;
+    public Sprite[] glitches;
     public Sprite black;
 
     private Sprite chosenIcon;
     private Sprite[] displayedIcons = new Sprite[25];
 
     int? selected = null;
-    int[] solution = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 };
-    int[] grid     = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24 };
-    string[] coords = new string[] { "A5", "B5", "C5", "D5", "E5", "A4", "B4", "C4", "D4", "E4", "A3", "B3", "C3", "D3", "E3", "A2", "B2", "C2", "D2", "E2", "A1", "B1", "C1", "D1", "E1"};
-    string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXY";
+    int[] solution = Enumerable.Range(0, 25).ToArray();
+    int[] grid = Enumerable.Range(0, 25).ToArray();
+    string[] coords = new string[] { "A5", "B5", "C5", "D5", "E5", "A4", "B4", "C4", "D4", "E4", "A3", "B3", "C3", "D3", "E3", "A2", "B2", "C2", "D2", "E2", "A1", "B1", "C1", "D1", "E1" };
 
     static int moduleIdCounter = 1;
     int moduleId;
@@ -35,7 +35,7 @@ public class MischmodulScript : MonoBehaviour {
     {
         moduleId = moduleIdCounter++;
 
-        glitchButton.OnInteract += delegate () { StartCoroutine(GlitchEffect()); return false; };
+        glitchButton.OnInteract += delegate () { StartCoroutine(GlitchEffect(0.5f)); return false; };
         GetComponent<KMBombModule>().OnActivate += delegate () { Activate(); };
         Bomb.OnBombExploded += delegate () { if (!moduleSolved) { Debug.LogFormat("[Mischmodul #{0}] Bomb detonation detected. Upon termination, the module displayed the following grid:", moduleId); LogLetters(grid); Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact Danny7007#1377 on Discord.", moduleId); } };
     
@@ -54,8 +54,8 @@ public class MischmodulScript : MonoBehaviour {
         foreach (KMSelectable button in buttons)
         {
             button.OnInteract += delegate () { KeyPress(Array.IndexOf(buttons, button)); return false; };
-            button.OnHighlight += delegate () { if (!moduleSolved) sprites[Array.IndexOf(buttons, button)].sprite = black; };
-            button.OnHighlightEnded += delegate () { if (Array.IndexOf(buttons, button) != selected) sprites[Array.IndexOf(buttons, button)].sprite = displayedIcons[grid[Array.IndexOf(buttons, button)]]; };
+            button.OnHighlight += delegate () { if (!moduleSolved && !glitching) sprites[Array.IndexOf(buttons, button)].sprite = black; };
+            button.OnHighlightEnded += delegate () { if (!moduleSolved && !glitching) if (Array.IndexOf(buttons, button) != selected) sprites[Array.IndexOf(buttons, button)].sprite = displayedIcons[grid[Array.IndexOf(buttons, button)]]; };
         }
         Audio.PlaySoundAtTransform("Intro", transform);
         grid.Shuffle();
@@ -94,16 +94,12 @@ public class MischmodulScript : MonoBehaviour {
     void GetTiles()
     {
         for (int i = 0; i < 25; i++)
-        {
             displayedIcons[i] = Sprite.Create(chosenIcon.texture, new Rect((6 * (i % 5)) + 1, 6 * (i / 5) + 1, 6, 6), new Vector2(0.5f, 0.5f));
-        }
     }   
     void SetTiles()
     {
         for (int i = 0; i < 25; i++)
-        {
             sprites[i].sprite = displayedIcons[grid[i]];
-        }
     }
     
     void DoLogging()
@@ -127,22 +123,19 @@ public class MischmodulScript : MonoBehaviour {
         yield return null;
     }
 
-    IEnumerator GlitchEffect()
+    IEnumerator GlitchEffect(float time)
     {
-        if (moduleSolved || glitching) yield break;
+        if (glitching)
+            yield break;
         glitching = true;
-        for (int i = 0; i < 25; i++)
+        for (float elapsed = 0; elapsed < time; elapsed += 0.075f)
         {
-            if (grid[i] != solution[i])
-            {
-                sprites[i].transform.localPosition = new Vector3(0, 0.5f, 0); //Intentionally causes z-fighting for the glitch effect.
-            }
+            for (int i = 0; i < 25; i++)
+                if (grid[i] != solution[i])
+                    sprites[i].sprite = glitches.PickRandom();
+            yield return new WaitForSecondsRealtime(0.075f);
         }
-        yield return new WaitForSecondsRealtime(0.5f);
-        for (int i = 0; i < 25; i++)
-        {
-            sprites[i].transform.localPosition = new Vector3(0, 0.501f, 0);
-        }
+        SetTiles();
         glitching = false;
     }
 
@@ -151,7 +144,7 @@ public class MischmodulScript : MonoBehaviour {
         string output = string.Empty;
         for (int i = 0; i < 25; i++)
         {
-            output += alphabet[input[i]];
+            output += input[i] - 'A';
             if (i % 5 == 4)
             {
                 Debug.LogFormat("[Mischmodul #{0}] {1}", moduleId, output);
@@ -161,19 +154,21 @@ public class MischmodulScript : MonoBehaviour {
     }
 
     #pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"Use !{0} swap A2 E3 to swap those coordinates. Commands can be chained with spaces. Use !{0} test to turn all incorrect squares temporarily black.";
+    private readonly string TwitchHelpMessage = @"Use !{0} swap A2 E3 to swap those coordinates. Commands can be chained with spaces. Use <!{0} test> to flicker the squares.";
     #pragma warning restore 414
 
     IEnumerator ProcessTwitchCommand (string input)
     {
         string Command = input.Trim().ToUpperInvariant();
         List<string> parameters = Command.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
-        if (Regex.IsMatch(Command, @"^(swap\s)?\s*([A-E][1-5]\s*)+$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase))
-        {
-            parameters.Remove("SWAP");
-            if ((parameters.Count % 2 != 0) && selected == null)
+        if (parameters[0] == "SWAP")
+            parameters.RemoveAt(0);
+        if (parameters.All(x => coords.Contains(x)))
+        { 
+            if ((parameters.Count % 2 == 0) ^ selected == null)
             {
-                yield return "sendtochaterror You need to specify an even number of swaps."; yield break;
+                yield return "sendtochaterror All swaps need to be concluded.";
+                yield break;
             }
             yield return null;
             foreach (string coord in parameters)
@@ -182,21 +177,10 @@ public class MischmodulScript : MonoBehaviour {
                 yield return new WaitForSeconds(0.2f);
             }
         }
-        else if (Regex.IsMatch(Command, @"^\s*(test)|(flash)|(inspect)|(glitch)|(flicker)\s*$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase));
+        else if (Regex.IsMatch(Command, @"^\s*(test)|(flash)|(inspect)|(glitch)|(flicker)\s*$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase))
         {
-            yield return null;
-            for (int i = 0; i < 25; i++)
-            {
-                if (grid[i] != solution[i])
-                {
-                    sprites[i].sprite = black;
-                }
-            }
-            yield return new WaitForSeconds(0.75f);
-            for (int i = 0; i < 25; i++)
-            {
-                sprites[i].sprite = displayedIcons[grid[i]];
-            }
+           yield return null;
+           StartCoroutine(GlitchEffect(1.5f));
         }
     }
 
@@ -226,7 +210,5 @@ public class MischmodulScript : MonoBehaviour {
                 }
             }
         }
-
-        yield return null;
     }
 }
