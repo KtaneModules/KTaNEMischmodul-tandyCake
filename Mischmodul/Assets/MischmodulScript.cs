@@ -36,7 +36,7 @@ public class MischmodulScript : MonoBehaviour {
         moduleId = moduleIdCounter++;
         glitchButton.OnInteract += delegate () { StartCoroutine(GlitchEffect()); return false; };
         GetComponent<KMBombModule>().OnActivate += delegate () { Activate(); };
-        Bomb.OnBombExploded += delegate () { if (!moduleSolved) { Debug.LogFormat("[Mischmodul #{0}] Bomb detonation detected. Upon termination, the module displayed the following grid:", moduleId); LogLetters(grid); Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact Danny7007#1377 on Discord.", moduleId); } };
+        Bomb.OnBombExploded += delegate () { Debug.LogFormat("[Mischmodul #{0}] Bomb detonation detected. Upon termination, the module displayed the following grid:", moduleId); LogLetters(grid); Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact Danny7007#1377 on Discord.", moduleId); };
     
         allIcons = allIcons.Where(x => x != null).ToArray();
     }
@@ -168,7 +168,7 @@ public class MischmodulScript : MonoBehaviour {
     IEnumerator ProcessTwitchCommand (string input)
     {
         string Command = input.Trim().ToUpperInvariant();
-        List<string> parameters = Command.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
+        List<string> parameters = Command.Split(' ').ToList() ;
         if (Regex.IsMatch(Command, @"^(swap\s)?\s*([A-E][1-5]\s*)+$", RegexOptions.CultureInvariant | RegexOptions.IgnoreCase))
         {
             parameters.Remove("SWAP");
