@@ -34,16 +34,24 @@ public class MischmodulScript : MonoBehaviour {
     void Awake ()
     {
         moduleId = moduleIdCounter++;
-
+        allIcons = allIcons.Where(x => x != null).ToArray();
         glitchButton.OnInteract += delegate () { StartCoroutine(GlitchEffect(0.5f)); return false; };
         GetComponent<KMBombModule>().OnActivate += delegate () { Activate(); };
-        Bomb.OnBombExploded += delegate () { if (!moduleSolved) { Debug.LogFormat("[Mischmodul #{0}] Bomb detonation detected. Upon termination, the module displayed the following grid:", moduleId); LogLetters(grid); Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact Danny7007#1377 on Discord.", moduleId); } };
+        Bomb.OnBombExploded += delegate () 
+        {
+            if (!moduleSolved)
+            {
+                Debug.LogFormat("[Mischmodul #{0}] Bomb detonation detected. Upon termination, the module displayed the following grid:", moduleId);
+                LogLetters(grid);
+            }
+        };
     
     }
 
     void Start ()
     {
-        chosenIcon = allIcons.Where(x => x != null).PickRandom();
+        chosenIcon = allIcons.PickRandom();
+        //chosenIcon = allIcons.First(x => x.name.ToUpper().StartsWith("GHOST")); //DEBUG LINE
         bgSprite.sprite = chosenIcon;
         GetTiles();
         SetTiles();
@@ -54,8 +62,17 @@ public class MischmodulScript : MonoBehaviour {
         foreach (KMSelectable button in buttons)
         {
             button.OnInteract += delegate () { KeyPress(Array.IndexOf(buttons, button)); return false; };
-            button.OnHighlight += delegate () { if (!moduleSolved && !glitching) sprites[Array.IndexOf(buttons, button)].sprite = black; };
-            button.OnHighlightEnded += delegate () { if (!moduleSolved && !glitching) if (Array.IndexOf(buttons, button) != selected) sprites[Array.IndexOf(buttons, button)].sprite = displayedIcons[grid[Array.IndexOf(buttons, button)]]; };
+            button.OnHighlight += delegate ()
+            {
+                if (!moduleSolved && !glitching)
+                    sprites[Array.IndexOf(buttons, button)].sprite = black;
+            };
+            button.OnHighlightEnded += delegate () 
+            {
+                int ix = Array.IndexOf(buttons, button);
+                if (!moduleSolved && !glitching && ix != selected)
+                        sprites[ix].sprite = displayedIcons[grid[ix]];
+            };
         }
         Audio.PlaySoundAtTransform("Intro", transform);
         grid.Shuffle();
@@ -108,6 +125,7 @@ public class MischmodulScript : MonoBehaviour {
         Debug.LogFormat("[Mischmodul #{0}] The generated grid is as follows:", moduleId);
         LogLetters(grid);
         Debug.LogFormat("[Mischmodul #{0}] (To solve the module, alphabetize the above list)", moduleId);
+        Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact Danny7007#1377 on Discord.", moduleId);
     }
 
     IEnumerator CheckSolve()
@@ -128,6 +146,7 @@ public class MischmodulScript : MonoBehaviour {
         if (glitching)
             yield break;
         glitching = true;
+        selected = null;
         for (float elapsed = 0; elapsed < time; elapsed += 0.075f)
         {
             for (int i = 0; i < 25; i++)
@@ -144,7 +163,7 @@ public class MischmodulScript : MonoBehaviour {
         string output = string.Empty;
         for (int i = 0; i < 25; i++)
         {
-            output += input[i] - 'A';
+            output += (char)(input[i] + 'A');
             if (i % 5 == 4)
             {
                 Debug.LogFormat("[Mischmodul #{0}] {1}", moduleId, output);
