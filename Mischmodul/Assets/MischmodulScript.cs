@@ -50,8 +50,7 @@ public class MischmodulScript : MonoBehaviour {
 
     void Start ()
     {
-        chosenIcon = allIcons.PickRandom();
-        //chosenIcon = allIcons.First(x => x.name.ToUpper().StartsWith("GHOST")); //DEBUG LINE
+        DetermineList();
         bgSprite.sprite = chosenIcon;
         GetTiles();
         SetTiles();
@@ -105,7 +104,16 @@ public class MischmodulScript : MonoBehaviour {
             SetTiles();
             StartCoroutine(CheckSolve());
         }
+    }
 
+    void DetermineList()
+    {
+        Sprite[] modsOnBomb = allIcons.Where(x => Bomb.GetModuleNames().Select(nm => nm.ToUpper())
+                .Contains(x.name.ToUpper())).ToArray();
+        if (UnityEngine.Random.Range(0, 3) == 0 && modsOnBomb.Length != 0)
+            chosenIcon = modsOnBomb.PickRandom();
+        else chosenIcon = allIcons.PickRandom();
+        //chosenIcon = allIcons.First(x => x.name.ToUpper().StartsWith("INGREDIENTS")); //DEBUG LINE
     }
 
     void GetTiles()
