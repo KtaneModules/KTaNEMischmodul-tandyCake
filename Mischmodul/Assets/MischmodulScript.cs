@@ -110,7 +110,7 @@ public class MischmodulScript : MonoBehaviour {
     {
         Sprite[] modsOnBomb = allIcons.Where(x => Bomb.GetModuleNames().Select(nm => nm.ToUpper())
                 .Contains(x.name.ToUpper())).ToArray();
-        if (UnityEngine.Random.Range(0, 3) == 0 && modsOnBomb.Length != 0)
+        if (UnityEngine.Random.Range(0, 2) == 0 && modsOnBomb.Length != 0)
             chosenIcon = modsOnBomb.PickRandom();
         else chosenIcon = allIcons.PickRandom();
         //chosenIcon = allIcons.First(x => x.name.ToUpper().StartsWith("")); //DEBUG LINE
