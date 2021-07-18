@@ -30,6 +30,7 @@ public class MischmodulScript : MonoBehaviour {
     int moduleId;
     private bool moduleSolved;
     bool glitching;
+    private Color[][] displayedPixels = new Color[25][];
 
     void Awake ()
     {
@@ -45,7 +46,6 @@ public class MischmodulScript : MonoBehaviour {
                 LogLetters(grid);
             }
         };
-    
     }
 
     void Start ()
@@ -97,8 +97,8 @@ public class MischmodulScript : MonoBehaviour {
         else
         {
             Audio.PlaySoundAtTransform("PistonIn", buttons[pos].transform);
-            int temp = grid[(int)selected];
-            grid[(int)selected] = grid[pos];
+            int temp = grid[selected.Value];
+            grid[selected.Value] = grid[pos];
             grid[pos] = temp;
             selected = null;
             SetTiles();
@@ -113,13 +113,16 @@ public class MischmodulScript : MonoBehaviour {
         if (UnityEngine.Random.Range(0, 2) == 0 && modsOnBomb.Length != 0)
             chosenIcon = modsOnBomb.PickRandom();
         else chosenIcon = allIcons.PickRandom();
-        //chosenIcon = allIcons.First(x => x.name.ToUpper().StartsWith("")); //DEBUG LINE
+        chosenIcon = allIcons.First(x => x.name.StartsWith("simon says", StringComparison.InvariantCultureIgnoreCase)); //DEBUG LINE
     }
 
     void GetTiles()
     {
         for (int i = 0; i < 25; i++)
+        {
             displayedIcons[i] = Sprite.Create(chosenIcon.texture, new Rect((6 * (i % 5)) + 1, 6 * (i / 5) + 1, 6, 6), new Vector2(0.5f, 0.5f));
+            displayedPixels[i] = displayedIcons[i].texture.GetPixels((int)displayedIcons[i].textureRect.x, (int)displayedIcons[i].textureRect.y, 6, 6);
+        }
     }   
     void SetTiles()
     {
@@ -138,8 +141,10 @@ public class MischmodulScript : MonoBehaviour {
 
     IEnumerator CheckSolve()
     {
-        if (solution.SequenceEqual(grid))
+        if (Enumerable.Range(0,25).All(x => IsCorrect(x)))
         {
+            for (int i = 0; i < 25; i++)
+                sprites[i].sprite = displayedIcons[i];
             moduleSolved = true;
             yield return new WaitForSeconds(0.1f);
             Audio.PlaySoundAtTransform("Solve", transform);
@@ -148,6 +153,18 @@ public class MischmodulScript : MonoBehaviour {
         }
         yield return null;
     }
+
+    bool IsCorrect(int pos)
+    {
+        if (grid[pos] == solution[pos])
+            return true;
+        Color[] thisPixels = displayedPixels[grid[pos]];
+        for (int i = 0; i < 36; i++)
+            if (!thisPixels[i].Equals(displayedPixels[pos][i]))
+                return false;
+        return true;
+    }
+
 
     IEnumerator GlitchEffect(float time)
     {
@@ -158,7 +175,7 @@ public class MischmodulScript : MonoBehaviour {
         for (float elapsed = 0; elapsed < time; elapsed += 0.075f)
         {
             for (int i = 0; i < 25; i++)
-                if (grid[i] != solution[i])
+                if (!IsCorrect(i))
                     sprites[i].sprite = glitches.PickRandom();
             yield return new WaitForSecondsRealtime(0.075f);
         }
@@ -186,6 +203,7 @@ public class MischmodulScript : MonoBehaviour {
 
     IEnumerator ProcessTwitchCommand (string input)
     {
+
         string Command = input.Trim().ToUpperInvariant();
         List<string> parameters = Command.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).ToList();
         if (parameters[0] == "SWAP")
@@ -213,11 +231,12 @@ public class MischmodulScript : MonoBehaviour {
 
     IEnumerator TwitchHandleForcedSolve ()
     {
-        while (!moduleSolved)
+        //while (!moduleSolved)
+        do
         {
             if (selected != null)
             {
-                buttons[(int)selected].OnInteract();
+                buttons[selected.Value].OnInteract();
                 yield return new WaitForSeconds(0.1f);
             }
             for (int i = 0; i < 25; i++)
@@ -236,6 +255,6 @@ public class MischmodulScript : MonoBehaviour {
                     }
                 }
             }
-        }
+        } while (false);
     }
 }
