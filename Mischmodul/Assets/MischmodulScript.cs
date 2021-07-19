@@ -113,7 +113,7 @@ public class MischmodulScript : MonoBehaviour {
         if (UnityEngine.Random.Range(0, 2) == 0 && modsOnBomb.Length != 0)
             chosenIcon = modsOnBomb.PickRandom();
         else chosenIcon = allIcons.PickRandom();
-        chosenIcon = allIcons.First(x => x.name.StartsWith("simon says", StringComparison.InvariantCultureIgnoreCase)); //DEBUG LINE
+        //chosenIcon = allIcons.First(x => x.name.StartsWith("simon says", StringComparison.InvariantCultureIgnoreCase)); //DEBUG LINE
     }
 
     void GetTiles()
