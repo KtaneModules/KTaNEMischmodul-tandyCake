@@ -121,6 +121,7 @@ public class MischmodulScript : MonoBehaviour {
         for (int i = 0; i < 25; i++)
         {
             displayedIcons[i] = Sprite.Create(chosenIcon.texture, new Rect((6 * (i % 5)) + 1, 6 * (i / 5) + 1, 6, 6), new Vector2(0.5f, 0.5f));
+            displayedIcons[i].texture.wrapMode = TextureWrapMode.Clamp;
             displayedPixels[i] = displayedIcons[i].texture.GetPixels((int)displayedIcons[i].textureRect.x, (int)displayedIcons[i].textureRect.y, 6, 6);
         }
     }   
