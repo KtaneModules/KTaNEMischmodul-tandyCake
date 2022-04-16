@@ -137,7 +137,7 @@ public class MischmodulScript : MonoBehaviour {
         Debug.LogFormat("[Mischmodul #{0}] The generated grid is as follows:", moduleId);
         LogLetters(grid);
         Debug.LogFormat("[Mischmodul #{0}] (To solve the module, alphabetize the above list)", moduleId);
-        Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact Danny7007#1377 on Discord.", moduleId);
+        Debug.LogFormat("[Mischmodul #{0}] If you feel this icon has too high a level of ambiguity, please contact tandyCake#1377 on Discord.", moduleId);
     }
 
     IEnumerator CheckSolve()
